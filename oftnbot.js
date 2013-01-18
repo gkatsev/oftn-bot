@@ -48,7 +48,7 @@ var ΩF_0Bot = function(profile) {
 	Bot.call(this, profile);
 	
 	this.sandbox = new Sandbox(path.join(__dirname, "oftnbot-utils.js"));
-	this.factoids = new FactoidServer(path.join(__dirname, "oftnbot-factoids.json"));
+	//this.factoids = new FactoidServer(path.join(__dirname, "oftnbot-factoids.json"));
 
 	this.set_log_level(this.LOG_ALL);
 	this.set_trigger("!"); // Exclamation
@@ -67,6 +67,7 @@ util.inherits(ΩF_0Bot, Bot);
 
 	this.register_listener(/^((?:sm?|v8?|js?|hs?|>>?|\|)>)([^>].*)+/, Shared.execute_js);
 	this.register_listener(/\bhttps?:\/\/\S+/, this.url);
+        this.register_listener(/(\S+)\s*(\+\+|--)/, this.karma);
 
 	this.register_command("topic", Shared.topic);
 	this.register_command("find", Shared.find);
@@ -266,6 +267,36 @@ util.inherits(ΩF_0Bot, Bot);
 
 	});
 };
+
+var karmaFunction = function(context, user, fromUser) {
+    var reply = fromUser + " did karmad " + user;
+    if (user == fromUser) {
+        reply = "you can't karma yourself";
+    }
+    context.channel.send_reply(context.sender, reply);
+}
+var karma = {
+    plus: karmaFunction,
+    minus: karmaFunction
+}
+
+ΩF_0Bot.prototype.karma = function(context, text, user, operation) {
+    console.log("************");
+    console.log(context.channel);
+    console.log(text, user, operation);
+    console.log("************");
+
+    if (!context.channel.userlist[user]) {
+        context.channel.send_reply(context.sender, "Please supply a valid username");
+    } else {
+        var fromUser = context.sender.name;
+        if (operation === "++") {
+            karma.plus(context, user, fromUser);
+        } else {
+            karma.minus(context, user, fromUser);
+        }
+    }
+}
 
 
 ΩF_0Bot.prototype.start_github_server = function(port) {
